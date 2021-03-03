@@ -3,6 +3,8 @@ Jeti LUA script to log battery usage, display remaining LiPo %, set alarms for c
 
 This code is based on [RFID-Battery](https://www.rc-thoughts.com/rfid-battery) - many thanks to Tero from [RC-thougts.com](https://www.rc-thoughts.com)!
 
+_This is still **work in progress**!_
+
 ### Features
  * One app for all models, up to 15 batteries per model
  * All settings are model-specific
