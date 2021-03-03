@@ -1059,7 +1059,7 @@ local function loop()
    if (batIndex > 0) then
       if (rxLink > 0) then -- model on & connected
 	 local currentTime = system.getTime()
-	 local announceGo = system.getInputsVal(announceSwitch)
+	 local announceGo = (system.getInputsVal(announceSwitch) == 1)
 
 	 linkLostTSet = false
 	 linkLostTStore = 0
@@ -1168,12 +1168,20 @@ local function loop()
 	       end
 	    end
 	 end
-
+	 
 	 -- Percentage announce	 
-	 if (announceGo and percentage ~= "-" and percentage >= 0 and percentage <= 100 and announceTime < currentTime) then
-	    print("announce")
-	    system.playNumber(percentage, 0, "%", trans8.annCap)
-	    announceTime = currentTime + 20
+	 if (announceGo) then
+	    local percVal = -1
+
+	    if (percentage and percentage ~= "-") then
+	       percVal = tonumber(percentage)
+	    end
+	    
+	    if (percVal >= 0 and percVal <= 100 and announceTime < currentTime) then
+	       print("announce")
+	       system.playNumber(percVal, 0, "%", trans8.annCap)
+	       announceTime = currentTime + 20
+	    end
 	 end
       elseif (rxLink == 0) then -- model disconnected
 	 linkLostTCurrent = system.getTime()
