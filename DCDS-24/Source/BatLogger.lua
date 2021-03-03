@@ -24,7 +24,6 @@ local sensors = { labels = { "..." }, ids = { "..." }, params = { "..." } }
 
 local batteries = { names = {}, cells = {}, caps = {}, cycles = {} }
 local batIndex
-local batPercentage
 
 local mahSensor, mahParam, mahID
 local voltSensor, voltParam, voltID
@@ -48,6 +47,11 @@ local shouldLog = false
 local logTriggerTime = 0
 local logCapacity = 0
 local logHaveMah = false
+
+local loopReset = false
+local linkLostTSet = false
+local linkLostTStore, linkLostTCurrent = 0, 0
+local lastRxLink = 0
 ------------------------------------------------------------------------
 -- Read translations
 ------------------------------------------------------------------------
@@ -90,6 +94,27 @@ local function truncatedBatteryList()
 end
 
 ------------------------------------------------------------------------
+-- Reset the values used in loop() after changing the battery
+------------------------------------------------------------------------
+local function clearLoopValues()
+   shouldLog = false
+   logTriggerTime = 0
+   logCapacity = 0
+   logHaveMah = false
+   redAlert = false
+   lowDisplay = false
+   voltAlarmTSet = false
+   voltAlarmTStore = 0
+   voltAlarmTCurrent = 0
+   capVoicePlayed = false
+   voltVoicePlayed = false
+   announceTime = 0
+   percentage = "-"
+   loopReset = false
+   linkLostTStore = 0
+end
+
+------------------------------------------------------------------------
 -- Render the telemetry
 ------------------------------------------------------------------------
 local function printBattery()
@@ -114,7 +139,9 @@ local function printBattery()
       lcd.drawText((210 - lcd.getTextWidth(FONT_BIG, "-"))/2, 25, "-", FONT_BIG)
       lcd.drawText((210 - lcd.getTextWidth(FONT_MINI, trans8.telCapacity))/2, 51, trans8.telCapacity, FONT_MINI)
    else   
-      if (batPercentage == "-" or mahID == 0) then -- percentage not measured yet or no capacity sensor set
+      if (percentage == "-" or mahID == 0) then -- percentage not measured yet or no capacity sensor set
+	 
+	 
 	 lcd.drawText((150 - lcd.getTextWidth(FONT_BOLD, batteries.names[batIndex]))/2, 3, batteries.names[batIndex], FONT_BOLD)
 	 lcd.drawText((57 - lcd.getTextWidth(FONT_BIG, string.format("%.0f", batteries.cycles[batIndex])))/2, 25, string.format("%.0f", batteries.cycles[batIndex]), FONT_BIG)
 	 lcd.drawText((57 - lcd.getTextWidth(FONT_MINI, trans8.telCycles))/2, 51, trans8.telCycles, FONT_MINI)
@@ -124,8 +151,8 @@ local function printBattery()
       else
 	 lcd.drawRectangle(5, 9, 26, 41)
 	 lcd.drawFilledRectangle(12, 6, 12, 4)
-	 local chgY = 50 - (batPercentage * 0.39)
-	 local chgH = (batPercentage * 0.39) - 1
+	 local chgY = 50 - (percentage * 0.39)
+	 local chgH = (percentage * 0.39) - 1
 
 	 if (redAlert == true) then
 	    lcd.setColor(240, 0, 0)
@@ -141,7 +168,7 @@ local function printBattery()
 	    lcd.drawText(125 - lcd.getTextWidth(FONT_MAXI, "LOW"), 12, "LOW", FONT_MAXI)
 	 else
 	    local dispVal = string.format("%.1f%%", percentage)
-	    lcd.drawText(144 - lcd.getTextWidth(FONT_MAXI, string.format("%.1f%%", dispVal)), 14, dispVal, FONT_MAXI)
+	    lcd.drawText(144 - lcd.getTextWidth(FONT_MAXI, dispVal), 14, dispVal, FONT_MAXI)
 	 end
 
 	 lcd.drawText(41, 52, string.format("%.0f %s", batteries.cycles[batIndex], trans8.telCycShort), FONT_MINI)
@@ -540,6 +567,7 @@ end
 local function selectionBatteryChanged(value)
    batIndex = value
    form.reinit()
+   clearLoopValues()
    system.messageBox(trans8.battSelected .. batteries.names[batIndex])
 end
 
@@ -1016,6 +1044,7 @@ local function batteryKeyPressed(key)
    if (key == KEY_3) then
       batIndex = 0
       form.reinit()
+      clearLoopValues()
       system.messageBox(trans8.battUnselect)
    end
 end
@@ -1024,14 +1053,17 @@ end
 -- Loop
 ------------------------------------------------------------------------
 local function loop()
+   local txTelemetry = system.getTxTelemetry()
+   local rxLink = txTelemetry["rx1Percent"] + txTelemetry["rx2Percent"] + txTelemetry["rxBPercent"]
+   
    if (batIndex > 0) then
-      local txTelemetry = system.getTxTelemetry()
-      local currentRxVoltage = txTelemetry["rx1Voltage"]
-
-      if (currentRxVoltage > 0.0) then -- model on & connected
+      if (rxLink > 0) then -- model on & connected
 	 local currentTime = system.getTime()
-	 local announceGo = system.getInputsVal(annSw)
+	 local announceGo = system.getInputsVal(announceSwitch)
 
+	 linkLostTSet = false
+	 linkLostTStore = 0
+	 
 	 if (logTriggerTime == 0) then
 	    logTriggerTime = currentTime + 30
 	 end
@@ -1050,46 +1082,51 @@ local function loop()
 	       mahCapa = mahCapa.value
 	       logCapacity = mahCapa
 	       logHaveMah = true
-	    end
 
-	    local currentPercentage = ((batteries.caps[batIndex] - mahCapa) * 100) / batteries.caps[batIndex]
+	       local currentPercentage = ((batteries.caps[batIndex] - mahCapa) * 100) / batteries.caps[batIndex]
 
-	    if (currentPercentage < 0) then
-	       currentPercentage = 0
-	    elseif (currentPercentage > 100) then
-	       currentPercentage = 100
-	    end
-
-	    percentage = string.format("%.1f", currentPercentage)
-
-	    if (currentPercentage <= alarmCapacity) then
-	       redAlert = true
-	       if (not capVoicePlayed and alarmCapacityVoice ~= "...") then
-		  if (alarmCapacityRpt) then
-		     system.playFile(alarmCapacityVoice, AUDIO_QUEUE)
-		     system.playFile(alarmCapacityVoice, AUDIO_QUEUE)
-		     system.playFile(alarmCapacityVoice, AUDIO_QUEUE)
-		  else
-		     system.playFile(alarmCapacityVoice, AUDIO_QUEUE)
-		  end
-
-		  capVoicePlayed = true
+	       if (currentPercentage < 0) then
+		  currentPercentage = 0
+	       elseif (currentPercentage > 100) then
+		  currentPercentage = 100
 	       end
-	    else
+
+	       if (lowDisplay) then
+		  currentPercentage = 100
+	       end
+
+	       percentage = string.format("%.1f", currentPercentage)
+
+	       if (currentPercentage <= alarmCapacity) then
+		  redAlert = true
+		  if (not capVoicePlayed and alarmCapacityVoice ~= "...") then
+		     if (alarmCapacityRpt) then
+			system.playFile(alarmCapacityVoice, AUDIO_QUEUE)
+			system.playFile(alarmCapacityVoice, AUDIO_QUEUE)
+			system.playFile(alarmCapacityVoice, AUDIO_QUEUE)
+		     else
+			system.playFile(alarmCapacityVoice, AUDIO_QUEUE)
+		     end
+
+		     capVoicePlayed = true
+		  end
+	       else
+		  capVoicePlayed = false
+	       end
+	    elseif (not lowDisplay) then
+	       percentage = "-"
 	       capVoicePlayed = false
-	    end  
-	 else
-	    percentage = "-"
-	    capVoicePlayed = false
-	    redAlert = false
+	       redAlert = false
+	    end
 	 end
 
 	 -- low battery voltage
 	 if (voltSensor > 1 and voltAlarmTStore >= voltAlarmTCurrent) then
 	    local voltValue = system.getSensorByID(voltID, voltParam)
+
 	    if (voltValue and voltValue.valid) then
 	       voltValue = voltValue.value
-
+	       
 	       if (voltAlarmTSet == false) then
 		  voltAlarmTCurrent = currentTime
 		  voltAlarmTStore = currentTime + 10
@@ -1097,16 +1134,16 @@ local function loop()
 	       else
 		  voltAlarmTCurrent = system.getTime()
 	       end
-
+	       
 	       if (alarmVolt == 0) then
 		  voltVoicePlayed = false
 		  voltAlarmTStore = 0
 	       else
 		  local alarmVoltValue = alarmVolt / 100
 		  local voltLimit = batteries.cells[batIndex] * alarmVoltValue
-
+		  
 		  if (voltValue <= voltLimit) then
-		     redAlert = 1
+		     redAlert = true
 		     shouldLog = false
 		     lowDisplay = true
 
@@ -1132,34 +1169,41 @@ local function loop()
 	    end
 	 end
 
-	 if (announceGo and percentage >= 0 and percentage <= 100 and announceTime < currentTime) then
+	 -- Percentage announce	 
+	 if (announceGo and percentage ~= "-" and percentage >= 0 and percentage <= 100 and announceTime < currentTime) then
+	    print("announce")
 	    system.playNumber(percentage, 0, "%", trans8.annCap)
 	    announceTime = currentTime + 20
 	 end
-      elseif (currentRxVoltage == 0.0 and logHaveMah and shouldLog) then -- model disconnected
-	 if (batteries.caps[batIndex] == 0 or logCapacity == 0) then
-	    shouldLog = false
-	 else
-	    writeLog()
+      elseif (rxLink == 0) then -- model disconnected
+	 linkLostTCurrent = system.getTime()
+
+	 if (lastRxLink > rxLink and not linkLostTSet) then
+	    linkLostTStore = linkLostTCurrent + 5
+	    linkLostTSet = true
 	 end
 
-	 batIndex = 0
-	 shouldLog = false
-	 logTriggerTime = false
-	 logCapacity = 0
-	 logHaveMah = false
-	 redAlert = false
-	 lowDisplay = false
-	 voltAlarmTSet = false
-	 voltAlarmTStore = 0
-	 voltAlarmTCurrent = 0
-	 capVoicePlayed = false
-	 voltVoicePlayed = false
-	 announceTime = 0
-	 percentage = "-"
+	 if (linkLostTSet and linkLostTStore > 0 and linkLostTStore < linkLostTCurrent) then
+	    if (logHaveMah and shouldLog) then 
+	       if (batteries.caps[batIndex] == 0 or logCapacity == 0) then
+		  shouldLog = false
+	       else
+		  writeLog()
+	       end
+	    end
+
+	    loopReset = true
+	    linkLostTStore = 0
+	 end
+
+	 if (loopReset) then
+	    batIndex = 0
+	    clearLoopValues()
+	 end
       end
    end
 
+   lastRxLink = rxLink
    collectgarbage()
 end
 
@@ -1169,7 +1213,6 @@ end
 local function init()
    modelName = system.getProperty("Model")
    batIndex = 0
-   batPercentage = "-"
    
    readSensors()
    
