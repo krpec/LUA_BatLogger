@@ -29,8 +29,9 @@ local batPercentage
 local mahSensor, mahParam, mahID
 local voltSensor, voltParam, voltID
 
-local alarmCapacity, alarmCapacityTr, alarmCapacityVoice, alarmCapacityRpt, alarmCapacityRptIndex
+local alarmCapacity, alarmCapacityVoice, alarmCapacityRpt, alarmCapacityRptIndex
 local alarmVolt, alarmVoltVoice, alarmVoltRpt, alarmVoltRptIndex
+-- local alarmCapacityTr
 
 local announceSwitch
 local announceTime = 0
@@ -219,8 +220,8 @@ end
 local function settingsChanged_capacityAlarm(value)
    alarmCapacity = value
    system.pSave("LPL_capAlarm", value)
-   alarmCapacityTr = string.format("%.1f", alarmCapacity)
-   system.pSave("LPL_capAlarmTr", alarmCapacityTr)
+--   alarmCapacityTr = string.format("%.1f", alarmCapacity)
+--   system.pSave("LPL_capAlarmTr", alarmCapacityTr)
    system.registerTelemetry(1, trans8.telLabel, 2, printBattery)
 end
 
@@ -1059,7 +1060,7 @@ local function loop()
 	       currentPercentage = 100
 	    end
 
-	    percentage = string.format("%.1f" currentPercentage)
+	    percentage = string.format("%.1f", currentPercentage)
 
 	    if (currentPercentage <= alarmCapacity) then
 	       redAlert = true
@@ -1181,7 +1182,7 @@ local function init()
    voltSensor = system.pLoad("LPL_voltSensor", 0)
 
    alarmCapacity = system.pLoad("LPL_capAlarm", 0)
-   alarmCapacityTr = system.pLoad("LPL_capAlarmTr", 1)
+--   alarmCapacityTr = system.pLoad("LPL_capAlarmTr", 1)
    alarmCapacityVoice = system.pLoad("LPL_capAlarmVoice", "...")
    local alCapRpt = system.pLoad("LPL_capAlarmRpt", 0)
    alarmCapacityRpt = (alCapRpt == 1)
