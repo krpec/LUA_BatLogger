@@ -13,6 +13,7 @@
     "labelCommon":"Common Settings",
     "labelAlarm":"Alarm Settings Capacity",
     "labelAlarmVolt":"Alarm Settings Voltage",
+    "labelAnnounce": "Capacity announcement",
     "modName":"Model name",
     "labelBatt":"Battery Settings",
     "battName":"Battery name",
@@ -30,10 +31,11 @@
     "lowFlightpack":"Low Flightbattery Voltage!",
     "spacer":" -----------------------------------------------------------------------------------------------",
     "annSw":"Announcement Switch",
-    "annCap":"Capacity"
+    "annCap":"Capacity",
+    "annRpt":"Repeat Announcement (s)"
   },
   "cz": {
-    "appName": "Battery Logger",
+    "appName": "Log baterií",
     "battSelName": "Výběr baterie",
     "telLabel": "Battery Logger",
     "noPack": "Baterie nevybrána",
@@ -45,6 +47,7 @@
     "labelCommon":"Obecná nastavení",
     "labelAlarm":"Nastavení alarmu kapacity",
     "labelAlarmVolt":"Nastavení alarmu napětí",
+    "labelAnnounce":"Oznámení kapacity",
     "modName":"Název modelu",
     "labelBatt":"Nastavení baterií",
     "battName":"Název baterie",
@@ -62,6 +65,7 @@
     "lowFlightpack":"Nízké napětí baterie!",
     "spacer":" -----------------------------------------------------------------------------------------------",
     "annSw":"Spínač oznámení",
-    "annCap":"Kapacita"
+    "annCap":"Kapacita",
+    "annRpt":"Opakovat oznámení (s)"
   }
 }

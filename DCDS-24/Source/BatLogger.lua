@@ -15,7 +15,8 @@ collectgarbage()
 -- Locals
 ------------------------------------------------------------------------
 local appVersion = "1.0"
-local formFooter = "LiPo Logger v." .. appVersion .. ", based on RFID-Battery "
+local formFooter = "Battery Logger v." .. appVersion
+local formFooter2 = "Code by Roman Dittrich, based on RFID-Battery"
 local trans8
 
 local modelName
@@ -30,10 +31,9 @@ local voltSensor, voltParam, voltID
 
 local alarmCapacity, alarmCapacityVoice, alarmCapacityRpt, alarmCapacityRptIndex
 local alarmVolt, alarmVoltVoice, alarmVoltRpt, alarmVoltRptIndex
--- local alarmCapacityTr
 
 local announceSwitch
-local announceTime = 0
+local announceTime, announceRepeat = 0
 local percentage = "-"
 
 local redAlert = false
@@ -57,7 +57,7 @@ local lastRxLink = 0
 ------------------------------------------------------------------------
 local function setLanguage()
    local lng = system.getLocale()
-   local file = io.readall("Apps/Lang/BatLogger.jsn")
+   local file = io.readall("Apps/BatLogger/locale.jsn")
    local obj = json.decode(file)
    if (obj) then
       trans8 = obj[lng] or obj[obj.default]
@@ -182,36 +182,11 @@ local function printBattery()
 end
 
 ------------------------------------------------------------------------
--- write csv file with the log - TODO: rewrite this
-------------------------------------------------------------------------
-local function writeLog()
-   local logFile = "Apps/Log/BatLogger.csv"
-   local dt = system.getDateTime()
-   local logTime = string.format("%d%02d%02dT%02d%02d", dt.year, dt.mon, dt.day, dt.hour, dt.min)
-   local logCap = string.format("%.0f", logCapacity)
-   local batCap = string.format("%.0f", batteries.caps[batIndex])
-   local batCyc = batteries.cycles[batIndex] + 1
-   local batName = batteries.names[batIndex]:gsub("[^%w ]", "")
-   settingsChanged_batCycles(batIndex, batCyc)
-
-   local logLine = string.format("%s,%s,%s,%s,%s,%s,,,", logTime, modelName, batName, batCap, logCap, batCyc)
-
-   local writeLog = io.open(logFile, "a")
-   if (writeLog) then
-      io.write(writeLog, logLine, "\n")
-      io.close(writeLog)
-   end
-
-   system.messageBox(trans8.logWrite, 5)
-   collectgarbage()
-end
-
-------------------------------------------------------------------------
 -- sensors changes
 ------------------------------------------------------------------------
 local function sensorChanged_mAh(value)
    mahSensor = value
-   system.pSave("LPL_mAhSensor", value)
+   system.pSave("BTL_mAhSensor", value)
 
    mahID = string.format("%s", sensors.ids[mahSensor])
    mahParam = string.format("%s", sensors.params[mahSensor])
@@ -221,13 +196,13 @@ local function sensorChanged_mAh(value)
       mahParam = 0
    end
 
-   system.pSave("LPL_mAhID", mahID)
-   system.pSave("LPL_mAhParam", mahParam)
+   system.pSave("BTL_mAhID", mahID)
+   system.pSave("BTL_mAhParam", mahParam)
 end
 
 local function sensorChanged_volt(value)
    voltSensor = value
-   system.pSave("LPL_voltSensor", value)
+   system.pSave("BTL_voltSensor", value)
 
    voltID = string.format("%s", sensors.ids[voltSensor])
    voltParam = string.format("%s", sensors.params[voltSensor])
@@ -237,8 +212,8 @@ local function sensorChanged_volt(value)
       voltParam = 0
    end
 
-   system.pSave("LPL_voltID", voltID)
-   system.pSave("LPL_voltParam", voltParam)
+   system.pSave("BTL_voltID", voltID)
+   system.pSave("BTL_voltParam", voltParam)
 end
 
 ------------------------------------------------------------------------
@@ -246,51 +221,56 @@ end
 ------------------------------------------------------------------------
 local function settingsChanged_capacityAlarm(value)
    alarmCapacity = value
-   system.pSave("LPL_capAlarm", value)
+   system.pSave("BTL_capAlarm", value)
 --   alarmCapacityTr = string.format("%.1f", alarmCapacity)
---   system.pSave("LPL_capAlarmTr", alarmCapacityTr)
+--   system.pSave("BTL_capAlarmTr", alarmCapacityTr)
    system.registerTelemetry(1, trans8.telLabel, 2, printBattery)
 end
 
 local function settingsChanged_capacityAlarmVoice(value)
    alarmCapacityVoice = value
-   system.pSave("LPL_capAlarmVoice", value)
+   system.pSave("BTL_capAlarmVoice", value)
 end
 
 local function settingsChanged_capacityAlarmRepeat(value)
    alarmCapacityRpt = not value
    form.setValue(alarmCapacityRptIndex, alarmCapacityRpt)
    if (alarmCapacityRpt) then
-      system.pSave("LPL_capAlarmRpt", 1)
+      system.pSave("BTL_capAlarmRpt", 1)
    else
-      system.pSave("LPL_capAlarmRpt", 0)
+      system.pSave("BTL_capAlarmRpt", 0)
    end
 end
 
 local function settingsChanged_voltAlarm(value)
    alarmVolt = value
-   system.pSave("LPL_voltAlarm", value)
+   system.pSave("BTL_voltAlarm", value)
    system.registerTelemetry(1, trans8.telLabel, 2, printBattery)
 end
 
 local function settingsChanged_voltAlarmVoice(value)
    alarmVoltVoice = value
-   system.pSave("LPL_voltAlarmVoice", value)
+   system.pSave("BTL_voltAlarmVoice", value)
 end
 
 local function settingsChanged_voltAlarmRepeat(value)
    alarmVoltRpt = not value
    form.setValue(alarmVoltRptIndex, alarmVoltRpt)
    if (alarmVoltRpt) then
-      system.pSave("LPL_voltAlarmRpt", 1)
+      system.pSave("BTL_voltAlarmRpt", 1)
    else
-      system.pSave("LPL_voltAlarmRpt", 0)
+      system.pSave("BTL_voltAlarmRpt", 0)
    end
 end
 
 local function settingsChanged_announceSwitch(value)
    announceSwitch = value
-   system.pSave("LPL_announceSwitch", value)
+   system.pSave("BTL_announceSwitch", value)
+end
+
+local function settingsChanged_announceTime(value)
+   announceRepeat = value
+   system.pSave("BTL_announceTime", value)
 end
 
 ------------------------------------------------------------------------
@@ -298,7 +278,7 @@ end
 ------------------------------------------------------------------------
 local function settingsChanged_batName(i, value)
    batteries.names[i] = value:gsub("[^%w ]", "")
-   system.pSave("LPL_batNames", batteries.names)
+   system.pSave("BTL_batNames", batteries.names)
    system.registerTelemetry(1, trans8.telLabel, 2, printBattery)
 end
 
@@ -364,7 +344,7 @@ end
 
 local function settingsChanged_batCells(i, value)
    batteries.cells[i] = value
-   system.pSave("LPL_batCells", batteries.cells)
+   system.pSave("BTL_batCells", batteries.cells)
    system.registerTelemetry(1, trans8.telLabel, 2, printBattery)
 end
 
@@ -431,7 +411,7 @@ end
 
 local function settingsChanged_batCap(i, value)
    batteries.caps[i] = value
-   system.pSave("LPL_batCaps", batteries.caps)
+   system.pSave("BTL_batCaps", batteries.caps)
    system.registerTelemetry(1, trans8.telLabel, 2, printBattery)
 end
 
@@ -497,7 +477,7 @@ end
 
 local function settingsChanged_batCycles(i, value)
    batteries.cycles[i] = value
-   system.pSave("LPL_batCycles", batteries.cycles)
+   system.pSave("BTL_batCycles", batteries.cycles)
    system.registerTelemetry(1, trans8.telLabel, 2, printBattery)
 end
 
@@ -572,6 +552,31 @@ local function selectionBatteryChanged(value)
 end
 
 ------------------------------------------------------------------------
+-- write csv file with the log - TODO: rewrite this
+------------------------------------------------------------------------
+local function writeLog()
+   local logFile = "Apps/BatLogger/log.csv"
+   local dt = system.getDateTime()
+   local logTime = string.format("%d%02d%02dT%02d%02d", dt.year, dt.mon, dt.day, dt.hour, dt.min)
+   local logCap = string.format("%.0f", logCapacity)
+   local batCap = string.format("%.0f", batteries.caps[batIndex])
+   local batCyc = batteries.cycles[batIndex] + 1
+   local batName = batteries.names[batIndex]:gsub("[^%w ]", "")
+   settingsChanged_batCycles(batIndex, batCyc)
+
+   local logLine = string.format("%s,%s,%s,%s,%s,%s,,,", logTime, modelName, batName, batCap, logCap, batCyc)
+
+   local writeLog = io.open(logFile, "a")
+   if (writeLog) then
+      io.write(writeLog, logLine, "\n")
+      io.close(writeLog)
+   end
+
+   system.messageBox(trans8.logWrite, 5)
+   collectgarbage()
+end
+
+------------------------------------------------------------------------
 -- UI - Settings form
 ------------------------------------------------------------------------
 local function initSettingsForm(subform)
@@ -631,12 +636,22 @@ local function initSettingsForm(subform)
       form.addLabel({ label = trans8.rptAlm, width = 275 })
       alarmVoltRptIndex = form.addCheckbox(alarmVoltRpt, settingsChanged_voltAlarmRepeat)
 
+      --announce settings
+      form.addRow(1)
+      form.addLabel({ label = trans8.labelAnnounce, font = FONT_BOLD })
+      
       form.addRow(2)
       form.addLabel({ label = trans8.annSw, width = 220 })
       form.addInputbox(announceSwitch, true, settingsChanged_announceSwitch)
 
+      form.addRow(2)
+      form.addLabel({ label = trans8.annRpt, width = 220 })
+      form.addIntbox(announceTime, 0, 60, 0, 0, 1, settingsChanged_announceTime)
+      
       form.addRow(1)
       form.addLabel({ label = formFooter, font = FONT_MINI, alignRight = true })
+      form.addRow(1)
+      form.addLabel({ label = formFooter2, font = FONT_MINI, alignRight = true })
       
       form.setFocusedRow(1)
       formID = 1
@@ -753,6 +768,8 @@ local function initSettingsForm(subform)
 
       form.addRow(1)
       form.addLabel({ label = formFooter, font = FONT_MINI, alignRight = true })
+      form.addRow(1)
+      form.addLabel({ label = formFooter2, font = FONT_MINI, alignRight = true })
 
       form.setFocusedRow(1)
       formID = 2
@@ -869,6 +886,8 @@ local function initSettingsForm(subform)
 
       form.addRow(1)
       form.addLabel({ label = formFooter, font = FONT_MINI, alignRight = true })
+      form.addRow(1)
+      form.addLabel({ label = formFooter2, font = FONT_MINI, alignRight = true })
 
       form.setFocusedRow(1)
       formID = 3
@@ -985,6 +1004,8 @@ local function initSettingsForm(subform)
 
       form.addRow(1)
       form.addLabel({ label = formFooter, font = FONT_MINI, alignRight = true })
+      form.addRow(1)
+      form.addLabel({ label = formFooter2, font = FONT_MINI, alignRight = true })
 
       form.setFocusedRow(1)
       formID = 4
@@ -1036,6 +1057,8 @@ local function initBatteryForm()
 
    form.addRow(1)
    form.addLabel({ label = formFooter, font = FONT_MINI, alignRight = true })
+   form.addRow(1)
+   form.addLabel({ label = formFooter2, font = FONT_MINI, alignRight = true })
 
    form.setFocusedRow(2)
 end
@@ -1142,13 +1165,19 @@ local function loop()
 		  local alarmVoltValue = alarmVolt / 100
 		  local voltLimit = batteries.cells[batIndex] * alarmVoltValue
 		  
-		  if (voltValue <= voltLimit) then
+		  
+		  if (voltValue > 0 and voltValue <= voltLimit) then
 		     redAlert = true
 		     shouldLog = false
 		     lowDisplay = true
 
 		     if (voltAlarmTStore >= voltAlarmTCurrent and voltAlarmTSet == true) then
 			if (not voltVoicePlayed and alarmVoltVoice ~= "...") then
+			   print("alarmVolt: " .. alarmVolt)
+			   print("alrmValue: " .. alarmVoltValue)
+			   print("voltLimit: " .. voltLimit)
+			   print("voltage: " .. voltValue)
+			   
 			   if (alarmVoltRpt) then
 			      system.playFile(alarmVoltVoice, AUDIO_QUEUE)
 			      system.playFile(alarmVoltVoice, AUDIO_QUEUE)
@@ -1177,10 +1206,9 @@ local function loop()
 	       percVal = tonumber(percentage)
 	    end
 	    
-	    if (percVal >= 0 and percVal <= 100 and announceTime < currentTime) then
-	       print("announce")
+	    if (percVal >= 0 and percVal <= 100 and announceTime <= currentTime) then
 	       system.playNumber(percVal, 0, "%", trans8.annCap)
-	       announceTime = currentTime + 20
+	       announceTime = currentTime + announceRepeat
 	    end
 	 end
       elseif (rxLink == 0) then -- model disconnected
@@ -1224,31 +1252,32 @@ local function init()
    
    readSensors()
    
-   mahID = system.pLoad("LPL_mAhID", 0)
-   mahParam = system.pLoad("LPL_mAhParam", 0)
-   mahSensor = system.pLoad("LPL_mAhSensor", 0)
+   mahID = system.pLoad("BTL_mAhID", 0)
+   mahParam = system.pLoad("BTL_mAhParam", 0)
+   mahSensor = system.pLoad("BTL_mAhSensor", 0)
 
-   voltID = system.pLoad("LPL_voltID", 0)
-   voltParam = system.pLoad("LPL_voltParam", 0)
-   voltSensor = system.pLoad("LPL_voltSensor", 0)
+   voltID = system.pLoad("BTL_voltID", 0)
+   voltParam = system.pLoad("BTL_voltParam", 0)
+   voltSensor = system.pLoad("BTL_voltSensor", 0)
 
-   alarmCapacity = system.pLoad("LPL_capAlarm", 0)
---   alarmCapacityTr = system.pLoad("LPL_capAlarmTr", 1)
-   alarmCapacityVoice = system.pLoad("LPL_capAlarmVoice", "...")
-   local alCapRpt = system.pLoad("LPL_capAlarmRpt", 0)
+   alarmCapacity = system.pLoad("BTL_capAlarm", 0)
+--   alarmCapacityTr = system.pLoad("BTL_capAlarmTr", 1)
+   alarmCapacityVoice = system.pLoad("BTL_capAlarmVoice", "...")
+   local alCapRpt = system.pLoad("BTL_capAlarmRpt", 0)
    alarmCapacityRpt = (alCapRpt == 1)
 
-   alarmVolt = system.pLoad("LPL_voltAlarm", 0)
-   alarmVoltVoice = system.pLoad("LPL_voltAlarmVoice", "...")
-   local alVoltRpt = system.pLoad("LPL_voltAlarmRpt", 0)
+   alarmVolt = system.pLoad("BTL_voltAlarm", 0)
+   alarmVoltVoice = system.pLoad("BTL_voltAlarmVoice", "...")
+   local alVoltRpt = system.pLoad("BTL_voltAlarmRpt", 0)
    alarmVoltRpt = (alVoltRpt == 1)
 
-   announceSwitch = system.pLoad("LPL_announceSwitch")
+   announceSwitch = system.pLoad("BTL_announceSwitch")
+   announceRepeat = system.pLoad("BTL_announceTime")
 
-   batteries.names = system.pLoad("LPL_batNames", { "", "", "", "", "", "", "", "", "", "", "", "", "", "", "" })
-   batteries.cells = system.pLoad("LPL_batCells", { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 })
-   batteries.caps = system.pLoad("LPL_batCaps", { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 })
-   batteries.cycles = system.pLoad("LPL_batCycles", { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 })
+   batteries.names = system.pLoad("BTL_batNames", { "", "", "", "", "", "", "", "", "", "", "", "", "", "", "" })
+   batteries.cells = system.pLoad("BTL_batCells", { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 })
+   batteries.caps = system.pLoad("BTL_batCaps", { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 })
+   batteries.cycles = system.pLoad("BTL_batCycles", { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 })
    
    system.registerForm(1, MENU_APPS, trans8.appName, initSettingsForm, settingsKeyPressed)
    system.registerForm(2, MENU_MAIN, trans8.battSelName, initBatteryForm, batteryKeyPressed)
