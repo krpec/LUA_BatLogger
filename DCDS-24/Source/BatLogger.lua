@@ -14,7 +14,7 @@ collectgarbage()
 ------------------------------------------------------------------------
 -- Locals
 ------------------------------------------------------------------------
-local appVersion = "1.0"
+local appVersion = "1.1"
 local formFooter = "Battery Logger v." .. appVersion
 local formFooter2 = "Code by Roman Dittrich, based on RFID-Battery"
 local trans8
@@ -33,7 +33,7 @@ local alarmCapacity, alarmCapacityVoice, alarmCapacityRpt, alarmCapacityRptIndex
 local alarmVolt, alarmVoltVoice, alarmVoltRpt, alarmVoltRptIndex
 
 local announceSwitch
-local announceTime, announceRepeat = 0
+local announceTime, announceRepeat = 0, 0
 local percentage = "-"
 
 local redAlert = false
@@ -646,7 +646,7 @@ local function initSettingsForm(subform)
 
       form.addRow(2)
       form.addLabel({ label = trans8.annRpt, width = 220 })
-      form.addIntbox(announceTime, 0, 60, 0, 0, 1, settingsChanged_announceTime)
+      form.addIntbox(announceRepeat, 0, 60, 0, 0, 1, settingsChanged_announceTime)
       
       form.addRow(1)
       form.addLabel({ label = formFooter, font = FONT_MINI, alignRight = true })
