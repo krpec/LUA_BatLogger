@@ -14,7 +14,7 @@ collectgarbage()
 ------------------------------------------------------------------------
 -- Locals
 ------------------------------------------------------------------------
-local appVersion = "1.1"
+local appVersion = "1.2"
 local formFooter = "Battery Logger v." .. appVersion
 local formFooter2 = "Code by Roman Dittrich, based on RFID-Battery"
 local trans8
@@ -1272,7 +1272,7 @@ local function init()
    alarmVoltRpt = (alVoltRpt == 1)
 
    announceSwitch = system.pLoad("BTL_announceSwitch")
-   announceRepeat = system.pLoad("BTL_announceTime")
+   announceRepeat = system.pLoad("BTL_announceTime", 0)
 
    batteries.names = system.pLoad("BTL_batNames", { "", "", "", "", "", "", "", "", "", "", "", "", "", "", "" })
    batteries.cells = system.pLoad("BTL_batCells", { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 })
