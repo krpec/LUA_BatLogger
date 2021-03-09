@@ -14,7 +14,7 @@ This code is based on [RFID-Battery](https://www.rc-thoughts.com/rfid-battery) -
  * Flight logging to csv file (full battery has to be connected and model has to be powered for at least 30 seconds and consume some mAhs for the logging to take place)
 
 ### Changelog
-#### Version 1.3
+#### Version 1.3 - _untested_
  * Added low battery voltage alarm
   * This will be triggered during the model operation, or may be triggered after main battery is disconnected and the receiver is powered from backup battery.
   * Won't affect the log - if the conditions for the flight to be logged are met, the log will be added to csv even if this alarm was triggered.
