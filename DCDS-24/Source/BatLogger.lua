@@ -2,11 +2,11 @@
     --------------------------------------------------------------------
     Battery Logger & alarm management
 
-    Heavily based on RC-Thoughts RFID-Battery, many thanks to Tero!
+    Based on RC-Thoughts RFID-Battery, many thanks to Tero!
     --------------------------------------------------------------------
     Released under MIT-license by Roman Dittrich (dittrich.r@gmail.com)
     
-    Version 0.1, released 2021-03-01
+    Version 1.2, released 2021-03-08
     --------------------------------------------------------------------
 --]]
 collectgarbage()
@@ -14,7 +14,7 @@ collectgarbage()
 ------------------------------------------------------------------------
 -- Locals
 ------------------------------------------------------------------------
-local appVersion = "1.2"
+local appVersion = "1.3"
 local formFooter = "Battery Logger v." .. appVersion
 local formFooter2 = "Code by Roman Dittrich, based on RFID-Battery"
 local trans8
@@ -30,7 +30,8 @@ local mahSensor, mahParam, mahID
 local voltSensor, voltParam, voltID
 
 local alarmCapacity, alarmCapacityVoice, alarmCapacityRpt, alarmCapacityRptIndex
-local alarmVolt, alarmVoltVoice, alarmVoltRpt, alarmVoltRptIndex
+local alarmInitVolt, alarmInitVoltVoice, alarmInitVoltRpt, alarmInitVoltRptIndex
+local alarmLowVolt, alarmLowVoltVoice, alarmLowVoltRpt, alarmLowVoltRptIndex
 
 local announceSwitch
 local announceTime, announceRepeat = 0, 0
@@ -42,6 +43,7 @@ local voltAlarmTSet = false
 local voltAlarmTStore, voltAlarmTCurrent = 0, 0
 local capVoicePlayed = false
 local voltVoicePlayed = false
+local lowVoltVoicePlayed = false
 
 local shouldLog = false
 local logTriggerTime = 0
@@ -108,6 +110,7 @@ local function clearLoopValues()
    voltAlarmTCurrent = 0
    capVoicePlayed = false
    voltVoicePlayed = false
+   lowVoltVoicePlayed = false
    announceTime = 0
    percentage = "-"
    loopReset = false
@@ -243,23 +246,44 @@ local function settingsChanged_capacityAlarmRepeat(value)
 end
 
 local function settingsChanged_voltAlarm(value)
-   alarmVolt = value
-   system.pSave("BTL_voltAlarm", value)
+   alarmInitVolt = value
+   system.pSave("BTL_initVoltAlarm", value)
    system.registerTelemetry(1, trans8.telLabel, 2, printBattery)
 end
 
 local function settingsChanged_voltAlarmVoice(value)
-   alarmVoltVoice = value
-   system.pSave("BTL_voltAlarmVoice", value)
+   alarmInitVoltVoice = value
+   system.pSave("BTL_initVoltAlarmVoice", value)
 end
 
 local function settingsChanged_voltAlarmRepeat(value)
-   alarmVoltRpt = not value
-   form.setValue(alarmVoltRptIndex, alarmVoltRpt)
-   if (alarmVoltRpt) then
-      system.pSave("BTL_voltAlarmRpt", 1)
+   alarmInitVoltRpt = not value
+   form.setValue(alarmInitVoltRptIndex, alarmInitVoltRpt)
+   if (alarmInitVoltRpt) then
+      system.pSave("BTL_initVoltAlarmRpt", 1)
    else
-      system.pSave("BTL_voltAlarmRpt", 0)
+      system.pSave("BTL_initVoltAlarmRpt", 0)
+   end
+end
+
+local function settingsChanged_lowVoltAlarm(value)
+   alarmLowVolt = value
+   system.pSave("BTL_lowVoltAlarm", value)
+   system.registerTelemetry(1, trans8.telLabel, 2, printBattery)
+end
+
+local function settingsChanged_lowVoltAlarmVoice(value)
+   alarmLowVoltVoice = value
+   system.pSave("BTL_lowVoltAlarmVoice", value)
+end
+
+local function settingsChanged_lowVoltAlarmRepeat(value)
+   alarmLowVoltRpt = not value
+   form.setValue(alarmLowVoltRptIndex, alarmLowVoltRpt)
+   if (alarmLowVoltRpt) then
+      system.pSave("BTL_lowVoltAlarmRpt", 1)
+   else
+      system.pSave("BTL_lowVoltAlarmRpt", 0)
    end
 end
 
@@ -605,7 +629,7 @@ local function initSettingsForm(subform)
       form.addLabel({ label = trans8.sensorVolt })
       form.addSelectbox(sensors.labels, voltSensor, true, sensorChanged_volt)
 
-      --alarm settings
+      --capacity alarm settings
       form.addRow(1)
       form.addLabel({ label = trans8.labelAlarm, font = FONT_BOLD })
 
@@ -621,21 +645,38 @@ local function initSettingsForm(subform)
       form.addLabel({ label = trans8.rptAlm, width = 275 })
       alarmCapacityRptIndex = form.addCheckbox(alarmCapacityRpt, settingsChanged_capacityAlarmRepeat)
 
+      --empty battery alarm settings
+      form.addRow(1)
+      form.addLabel({ label = trans8.labelAlarmEmpty, font = FONT_BOLD })
+
+      form.addRow(2)
+      form.addLabel({ label = trans8.AlmValVolt, width = 200 })
+      form.addIntbox(alarmInitVolt, 0, 450, 0, 2, 1, settingsChanged_voltAlarm)
+
+      form.addRow(2)
+      form.addLabel({ label = trans8.selAudio })
+      form.addAudioFilebox(alarmInitVoltVoice, settingsChanged_voltAlarmVoice)
+
+      form.addRow(2)
+      form.addLabel({ label = trans8.rptAlm, width = 275 })
+      alarmInitVoltRptIndex = form.addCheckbox(alarmInitVoltRpt, settingsChanged_voltAlarmRepeat)
+
+      --low voltage alarm settings
       form.addRow(1)
       form.addLabel({ label = trans8.labelAlarmVolt, font = FONT_BOLD })
 
       form.addRow(2)
       form.addLabel({ label = trans8.AlmValVolt, width = 200 })
-      form.addIntbox(alarmVolt, 0, 450, 0, 2, 1, settingsChanged_voltAlarm)
+      form.addIntbox(alarmLowVolt, 0, 435, 0, 2, 1, settingsChanged_lowVoltAlarm)
 
       form.addRow(2)
       form.addLabel({ label = trans8.selAudio })
-      form.addAudioFilebox(alarmVoltVoice, settingsChanged_voltAlarmVoice)
+      form.addAudioFilebox(alarmLowVoltVoice, settingsChanged_lowVoltAlarmVoice)
 
       form.addRow(2)
       form.addLabel({ label = trans8.rptAlm, width = 275 })
-      alarmVoltRptIndex = form.addCheckbox(alarmVoltRpt, settingsChanged_voltAlarmRepeat)
-
+      alarmLowVoltRptIndex = form.addCheckbox(alarmLowVoltRpt, settingsChanged_lowVoltAlarmRepeat)
+      
       --announce settings
       form.addRow(1)
       form.addLabel({ label = trans8.labelAnnounce, font = FONT_BOLD })
@@ -1143,56 +1184,80 @@ local function loop()
 	    end
 	 end
 
-	 -- low battery voltage
-	 if (voltSensor > 1 and voltAlarmTStore >= voltAlarmTCurrent) then
+	 -- voltage alarms
+	 if (voltSensor > 1) then
 	    local voltValue = system.getSensorByID(voltID, voltParam)
 
 	    if (voltValue and voltValue.valid) then
 	       voltValue = voltValue.value
+
+	       if (voltAlarmTStore >= voltAlarmTCurrent) then
+		  if (voltAlarmTSet == false) then
+		     voltAlarmTCurrent = currentTime
+		     voltAlarmTStore = currentTime + 10
+		     voltAlarmTSet = true
+		  else
+		     voltAlarmTCurrent = system.getTime()
+		  end
 	       
-	       if (voltAlarmTSet == false) then
-		  voltAlarmTCurrent = currentTime
-		  voltAlarmTStore = currentTime + 10
-		  voltAlarmTSet = true
-	       else
-		  voltAlarmTCurrent = system.getTime()
+		  if (alarmInitVolt == 0) then
+		     voltVoicePlayed = false
+		     voltAlarmTStore = 0
+		  else
+		     local alarmVoltValue = alarmInitVolt / 100
+		     local voltLimit = batteries.cells[batIndex] * alarmVoltValue
+		  
+		     if (voltValue > 0 and voltValue <= voltLimit) then
+			redAlert = true
+			shouldLog = false
+			lowDisplay = true
+
+			if (voltAlarmTStore >= voltAlarmTCurrent and voltAlarmTSet == true) then
+			   if (not voltVoicePlayed and alarmVoltVoice ~= "...") then			   
+			      if (alarmVoltRpt) then
+				 system.playFile(alarmVoltVoice, AUDIO_QUEUE)
+				 system.playFile(alarmVoltVoice, AUDIO_QUEUE)
+				 system.playFile(alarmVoltVoice, AUDIO_QUEUE)
+			      else
+				 system.playFile(alarmVoltVoice, AUDIO_QUEUE)
+			      end
+
+			      voltVoicePlayed = true
+			      system.messageBox(trans8.lowFlightpack, 10)
+			   end
+			end
+		     else
+			voltVoicePlayed = false
+			lowDisplay = false
+		     end
+		  end
 	       end
-	       
-	       if (alarmVolt == 0) then
-		  voltVoicePlayed = false
-		  voltAlarmTStore = 0
+
+	       -- low voltage alarm
+	       if (alarmLowVolt == 0) then
+		  lowVoltVoicePlayed = false
 	       else
-		  local alarmVoltValue = alarmVolt / 100
-		  local voltLimit = batteries.cells[batIndex] * alarmVoltValue
-		  
-		  
-		  if (voltValue > 0 and voltValue <= voltLimit) then
+		  local lowVoltValue = alarmLowVolt / 100
+		  local lowVoltLimit = batteries.cells[batIndex] * lowVoltValue
+
+		  if (voltValue > 0 and voltValue <= lowVoltLimit) then
 		     redAlert = true
-		     shouldLog = false
 		     lowDisplay = true
 
-		     if (voltAlarmTStore >= voltAlarmTCurrent and voltAlarmTSet == true) then
-			if (not voltVoicePlayed and alarmVoltVoice ~= "...") then
-			   print("alarmVolt: " .. alarmVolt)
-			   print("alrmValue: " .. alarmVoltValue)
-			   print("voltLimit: " .. voltLimit)
-			   print("voltage: " .. voltValue)
-			   
-			   if (alarmVoltRpt) then
-			      system.playFile(alarmVoltVoice, AUDIO_QUEUE)
-			      system.playFile(alarmVoltVoice, AUDIO_QUEUE)
-			      system.playFile(alarmVoltVoice, AUDIO_QUEUE)
-			   else
-			      system.playFile(alarmVoltVoice, AUDIO_QUEUE)
-			   end
-
-			   voltVoicePlayed = true
-			   system.messageBox(trans8.lowFlightpack, 10)
+		     if (not lowVoicePlayed and alarmLowVoltVoice ~= "...") then
+			if (alarmLowVoltRpt) then
+			   system.playFile(alarmLowVoltVoice, AUDIO_QUEUE)
+			   system.playFile(alarmLowVoltVoice, AUDIO_QUEUE)
+			   system.playFile(alarmLowVoltVoice, AUDIO_QUEUE)
+			else
+			   system.playFile(alarmLowVoltVoice, AUDIO_QUEUE)
 			end
+
+			lowVoltVoicePlayed = true
+			system.messageBox(trans8.lowFlightpack, 10)
 		     end
 		  else
-		     voltVoicePlayed = false
-		     lowDisplay = false
+		     lowVoltVoicePlayed = false
 		  end
 	       end
 	    end
@@ -1261,15 +1326,19 @@ local function init()
    voltSensor = system.pLoad("BTL_voltSensor", 0)
 
    alarmCapacity = system.pLoad("BTL_capAlarm", 0)
---   alarmCapacityTr = system.pLoad("BTL_capAlarmTr", 1)
    alarmCapacityVoice = system.pLoad("BTL_capAlarmVoice", "...")
    local alCapRpt = system.pLoad("BTL_capAlarmRpt", 0)
    alarmCapacityRpt = (alCapRpt == 1)
 
-   alarmVolt = system.pLoad("BTL_voltAlarm", 0)
-   alarmVoltVoice = system.pLoad("BTL_voltAlarmVoice", "...")
-   local alVoltRpt = system.pLoad("BTL_voltAlarmRpt", 0)
-   alarmVoltRpt = (alVoltRpt == 1)
+   alarmInitVolt = system.pLoad("BTL_initVoltAlarm", 0)
+   alarmInitVoltVoice = system.pLoad("BTL_initVoltAlarmVoice", "...")
+   local alVoltRpt = system.pLoad("BTL_initVoltAlarmRpt", 0)
+   alarmInitVoltRpt = (alVoltRpt == 1)
+
+   alarmLowVolt = system.pLoad("BTL_lowVoltAlarm", 0)
+   alarmLowVoltVoice = system.pLoad("BTL_lowVoltAlarmVoice", "...")
+   local alLowVoltRpt = system.pLoad("BTL_lowVoltAlarmRpt", 0)
+   alarmLowVoltRpt = (alLowVoltRpt == 1)
 
    announceSwitch = system.pLoad("BTL_announceSwitch")
    announceRepeat = system.pLoad("BTL_announceTime", 0)
@@ -1287,4 +1356,4 @@ end
 
 setLanguage()
 collectgarbage()
-return { init = init, loop = loop, destroy = destroy, author = "krpec", version = appVersion, name = trans8.appName }
+return { init = init, loop = loop, author = "Roman Dittrich", version = appVersion, name = trans8.appName }
