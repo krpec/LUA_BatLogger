@@ -1,5 +1,5 @@
 # BatLogger for Jeti DC/DS-24 & DS-12 transmitters
-Jeti LUA script to log battery usage, display remaining LiPo %, set alarms for capacity used & connecting uncharged battery.
+Jeti LUA script to log battery usage, display remaining LiPo %, set alarms for capacity used, low battery voltage & connecting uncharged battery.
 
 This code is based on [RFID-Battery](https://www.rc-thoughts.com/rfid-battery) - many thanks to Tero from [RC-thougts.com](https://www.rc-thoughts.com)!
 
@@ -8,8 +8,9 @@ This code is based on [RFID-Battery](https://www.rc-thoughts.com/rfid-battery) -
 ### Features
  * One app for all models, up to 15 batteries per model
  * All settings are model-specific
- * Automatic detection of empty battery when powering the model, alarm has user selectable voice-alert, can be repeated once or three times
+ * Automatic detection of empty battery when powering the model, alarm has user selectable voice-alert, can be repeated once or three times (alarm is disabled when the alarm voltage is set to 0.00V)
  * Capacity alarm has user selectable voice-alert, can be repeated once or three times
+ * Low battery voltage alarm has user selectable voice-alert, can be repeated once or three times (alarm is disabled when the alarm voltage is set to 0.00V)
  * Possibility to assing a switch for remaining percentage announcement
  * Telemetry window changes based on current situation (battery overview, capacity overview, "LOW" warning)
  * Each battery has its name, cell count, capacity and cycle count stored
@@ -17,9 +18,11 @@ This code is based on [RFID-Battery](https://www.rc-thoughts.com/rfid-battery) -
 
 ### Changelog
 #### Version 1.3 - _untested_
+ * _2021-03-09_
  * Added low battery voltage alarm
    * This will be triggered during the model operation, or may be triggered after main battery is disconnected and the receiver is powered from backup battery.
    * Won't affect the log - if the conditions for the flight to be logged are met, the log will be added to csv even if this alarm was triggered.
 
 #### Version 1.2
+ * _2021-03-07_
  * Tested and working correctly
