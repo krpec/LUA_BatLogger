@@ -1215,11 +1215,11 @@ local function loop()
 			if (voltAlarmTStore >= voltAlarmTCurrent and voltAlarmTSet == true) then
 			   if (not voltVoicePlayed and alarmVoltVoice ~= "...") then			   
 			      if (alarmVoltRpt) then
-				 system.playFile(alarmVoltVoice, AUDIO_QUEUE)
-				 system.playFile(alarmVoltVoice, AUDIO_QUEUE)
-				 system.playFile(alarmVoltVoice, AUDIO_QUEUE)
+				 system.playFile(alarmInitVoltVoice, AUDIO_QUEUE)
+				 system.playFile(alarmInitVoltVoice, AUDIO_QUEUE)
+				 system.playFile(alarmInitVoltVoice, AUDIO_QUEUE)
 			      else
-				 system.playFile(alarmVoltVoice, AUDIO_QUEUE)
+				 system.playFile(alarmInitVoltVoice, AUDIO_QUEUE)
 			      end
 
 			      voltVoicePlayed = true
@@ -1239,12 +1239,14 @@ local function loop()
 	       else
 		  local lowVoltValue = alarmLowVolt / 100
 		  local lowVoltLimit = batteries.cells[batIndex] * lowVoltValue
-
+		  
 		  if (voltValue > 0 and voltValue <= lowVoltLimit) then
 		     redAlert = true
 		     lowDisplay = true
 
-		     if (not lowVoicePlayed and alarmLowVoltVoice ~= "...") then
+		     if (not lowVoltVoicePlayed and alarmLowVoltVoice ~= "...") then
+			lowVoltVoicePlayed = true
+			
 			if (alarmLowVoltRpt) then
 			   system.playFile(alarmLowVoltVoice, AUDIO_QUEUE)
 			   system.playFile(alarmLowVoltVoice, AUDIO_QUEUE)
@@ -1253,7 +1255,6 @@ local function loop()
 			   system.playFile(alarmLowVoltVoice, AUDIO_QUEUE)
 			end
 
-			lowVoltVoicePlayed = true
 			system.messageBox(trans8.lowFlightpack, 10)
 		     end
 		  else

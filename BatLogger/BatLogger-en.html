@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<html>
+<head>
+ <meta charset="utf-8">
+ <title>Battery Log</title>
+</head>
+<body>
+ <h1>Battery Log</h1>
+ <p>
+   <img src="img/BatLogger-settings.png" alt="Battery Log - settings">
+   <img src="img/BatLogger-select.png" alt="Battery Log - battery selection">
+ </p>
+ <h2>Description</h2>
+ <p>Application is used to log battery cycles and display (+ do voice alarms) for remaining capacity percentage as well as relevant alarms. Logger contains two forms. The first one is "Battery Log," which can be found in the Applications menu after activating the user application. Here you can adjust the settings for selected model as well as batteries for that model. The second menu "Select battery" is in the main menu and server for battery selection before each flight.</p>
+ <ul>
+   <li>One application for all models.</li>
+   <li>All settings are model-specific.</li>
+   <li>Up to 15 batteries for each model. Each battery has its name, cell count, capacity and cycle count stored.</li>
+   <li>Automatic detection of empty battery when powering the model, alarm has user selectable voice-alert, can be repeated once or three times (alarm is disabled when the alarm voltage is set to 0.00V).</li>
+   <li>Capacity alarm has user selectable voice-alert, can be repeated once or three times. Setting this to 0% effectively disables the alarm.</li>
+   <li>Low battery voltage alarm has user selectable voice-alert, can be repeated once or three times (alarm is disabled when the alarm voltage is set to 0.00V).</li>
+   <li>Possibility to assing a switch for remaining percentage announcement, repeat period can be set.</li>
+   <li>Flight logging to csv file (full battery has to be connected and model has to be powered for at least 30 seconds and consume some mAhs for the logging to take place).</li>
+ </ul>
+ <p>Based on <a href="https://www.rc-thoughts.com/rfid-battery/">RFID-Battery</a> by Tero from <a href="https://www.rc-thoughts.com">RC-Thoughts</a>.</p>
+ <h2>Usage</h2>
+ <p>After initial application settings, the only thing to do before each flight is to select currently used battery. Application will display battery information in the telemetry window and will cause alarms for low voltage, capacity etc. After finishing the flight it is logged to csv file and the current battery is deselected.</p>
+ <p>Source code can be downloaded from the official
+    <a href="https://github.com/krpec/LUA_BatLogger">repository</a>.
+</body>
+</html>

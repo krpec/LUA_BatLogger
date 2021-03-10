@@ -6,23 +6,25 @@
 </head>
 <body>
  <h1>Log baterií</h1>
- <p><img src="img/Horizon6.png" alt="Log baterii"></p>
+ <p>
+   <img src="img/BatLogger-settings.png" alt="Log baterií - nastavení">
+   <img src="img/BatLogger-select.png" alt="Log baterií - výběr baterie">
+ </p>
  <h2>Popis</h2>
- <p>Aplikace na logovani cyklu baterii a zobrazeni (+ hlaseni) zbyvajici kapacity v % a nastaveni relevantnich alarmu. Logger obsahuje dva ruzne formulare (menu s nastavenim). Prvnim je menu "Log baterii", ktere se nachazi v menu aplikaci po aktivaci uzivatelske aplikace. Zde se nastavuji obecne parametry aplikace pro zvoleny model a zaroven i jednotlive baterie pro model. Druhe menu - "Vyber baterie" se nachazi v hlavnim menu a slouzi pro vyber baterie pred letem (pouzitim modelu).</p>
+ <p>Aplikace na logování cyklů baterií, zobrazení (+ hlášení) zbývající kapacity v % a nastavení relevantních alarmů. Logger obsahuje dva různé formuláře (menu s nastavením). Prvním je menu "Log baterií", které se nachází v menu aplikací po aktivaci uživatelské aplikace. Zde se nastavují obecné parametry aplikace pro zvoleny model a zároveň i jednotlivé baterie pro model. Druhé menu - "Výběr baterie" se nachází v hlavním menu a slouží pro výběr baterie před letem (použitím modelu).</p>
  <ul>
-   <li>Jedna aplikace pro vsechny modely.</li>
-   <li>Vsechna nastaveni jsou specificka pro zvoleny model.</li>
-   <li>Ke kazdemu modelu lze ulozit az 15 baterii. Kazda baterie ma nazev, pocet clanku, kapacitu a pocet cyklu.</li>
-   <li>Automaticka detekce pripojeni vybite baterie. Lze nastavit vysi napeti pro alarm, zvuk a pocet opakovani. Pro vypnuti tohoto alarmu je nutno jej nastavit na 0.00V.</li>
-   <li>Alarm kapacity baterie. Lze nastavit zbyvajici % kapacity baterie pro alarm, zvuk a pocet jeho opakovani (1x nebo 3x). Nastavenim na 0% je alarm efektivne vypnut.</li>
-   <li>Alarm nizkeho napeti baterie. Moznosti nastaveni stejne, jako u predchozich alarmu. Tento slouzi primarne jako pojistka pro pripad, ze by realna kapacita baterie neodpovidala kapacite vlozene do aplikace. Pro vypnuti tohoto alarmu je nutno jej nastavit na 0.00V.</li>
-   <li>Oznameni zbyvajici kapacity baterie s moznosti nastaveni periody opakovani.</li>
-   <li>Logovani probehlych letu do csv souboru (nabita baterie musi byt pripojena alespon 30s a mit nenulovy odber mAh aby doslo k zalogovani).</li>
+   <li>Jedna aplikace pro všechny modely.</li>
+   <li>Všechna nastavení jsou specifická pro zvolený model.</li>
+   <li>Ke každému modelu lze uložit az 15 baterií. Každá baterie ma název, počet článků, kapacitu a počet cyklů.</li>
+   <li>Automatická detekce připojení vybité baterie. Lze nastavit výši napětí pro alarm, zvuk a počet opakování. Pro vypnutí tohoto alarmu je nutno jej nastavit na 0.00V.</li>
+   <li>Alarm kapacity baterie. Lze nastavit zbývající % kapacity baterie pro alarm, zvuk a počet jeho opakovani (1x nebo 3x). Nastavením na 0% je alarm efektivně vypnut.</li>
+   <li>Alarm nízkého napětí baterie. Možnosti nastavení stejné, jako u předchozích alarmů. Tento slouží primárně jako pojistka pro případ, že by reálná kapacita baterie neodpovídala kapacitě vložené do aplikace. Pro vypnuti tohoto alarmu je nutno jej nastavit na 0.00V.</li>
+   <li>Oznámení zbývající kapacity baterie s možností nastavení periody opakování.</li>
+   <li>Logování proběhlých letů do csv souboru (nabitá baterie musí být připojena alespoň 30s a mít nenulový odběr mAh, aby došlo k zalogování).</li>
  </ul>
  <p>Založeno na kódu <a href="https://www.rc-thoughts.com/rfid-battery/">RFID-Battery</a> od Tera z <a href="https://www.rc-thoughts.com">RC-Thoughts</a>.</p>
  <h2>Použití</h2>
- <p>Po uvodnim nastaveni aplikace staci pred kazdym letem v menu "Vyber baterie" zvolit aktualne pouzivanou baterii. Aplikace v telemetrickem okne zobrazi informace o baterii a dle nastaveni upozorni na nizke napeti, kapacitu atd. Po ukonceni letu dojde k jeho zalogovani do csv souboru a deselekci aktualni baterie.</p>
- <p>Zdrojové kódy můžete stáhnout z oficiálního repozitáře 
-    <a href="https://github.com/krpec/LUA_BatLogger">zde</a>.
+ <p>Po úvodním nastavení aplikace stači před každým letem v menu "Výběr baterie" zvolit aktuálně používanou baterii. Aplikace v telemetrickem okně zobrazí informace o baterii a dle nastavení upozorní na nizké napětí, kapacitu atd. Po ukončení letu dojde k jeho zalogování do csv souboru a deselekci aktuální baterie.</p>
+ <p>Zdrojové kódy můžete stáhnout z oficiálního repozitáře <a href="https://github.com/krpec/LUA_BatLogger">zde</a>.</p>
 </body>
 </html>
