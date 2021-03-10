@@ -19,6 +19,7 @@ This code is based on [RFID-Battery](https://www.rc-thoughts.com/rfid-battery) -
 ### Changelog
 #### Version 1.3 - _untested_
  * _2021-03-09_
+ * **The alarm is not working correctly, needs to be fixed. It's recommended to use v1.2 for the time being**
  * Added low battery voltage alarm
    * This will be triggered during the model operation, or may be triggered after main battery is disconnected and the receiver is powered from backup battery.
    * Won't affect the log - if the conditions for the flight to be logged are met, the log will be added to csv even if this alarm was triggered.
