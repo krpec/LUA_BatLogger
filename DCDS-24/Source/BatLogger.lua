@@ -6,7 +6,7 @@
     --------------------------------------------------------------------
     Released under MIT-license by Roman Dittrich (dittrich.r@gmail.com)
     
-    Version 1.2, released 2021-03-08
+    Version 1.3, released 2021-03-09
     --------------------------------------------------------------------
 --]]
 collectgarbage()
