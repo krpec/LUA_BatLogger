@@ -44,6 +44,8 @@ local voltAlarmTStore, voltAlarmTCurrent = 0, 0
 local capVoicePlayed = false
 local voltVoicePlayed = false
 local lowVoltVoicePlayed = false
+local lowVoltTSet = false
+local lowVoltTStore, lowVoltTCurrent = 0, 0
 
 local shouldLog = false
 local logTriggerTime = 0
@@ -114,7 +116,12 @@ local function clearLoopValues()
    announceTime = 0
    percentage = "-"
    loopReset = false
+   linkLostTSet = false
    linkLostTStore = 0
+   linkLostTCurrent = 0
+   lowVoltTSet = false
+   lowVoltTStore = 0
+   lowVoltTCurrent = 0
 end
 
 ------------------------------------------------------------------------
@@ -1120,188 +1127,203 @@ local function loop()
    local txTelemetry = system.getTxTelemetry()
    local rxLink = txTelemetry["rx1Percent"] + txTelemetry["rx2Percent"] + txTelemetry["rxBPercent"]
    
-   if (batIndex > 0) then
-      if (rxLink > 0) then -- model on & connected
-	 local currentTime = system.getTime()
-	 local announceGo = (system.getInputsVal(announceSwitch) == 1)
+   if (rxLink > 0) then -- model on & connected
+      if (batIndex == 0) then
+	 system.registerForm(2, 0, trans8.battSelName, initBatteryForm, batteryKeyPressed)
+      elseif (batIndex > 0) then
+         local currentTime = system.getTime()
+         local announceGo = (system.getInputsVal(announceSwitch) == 1)
 
-	 linkLostTSet = false
-	 linkLostTStore = 0
-	 
-	 if (logTriggerTime == 0) then
-	    logTriggerTime = currentTime + 30
-	 end
+         linkLostTSet = false
+         linkLostTStore = 0
 
-	 if (logTriggerTime > 0 and logTriggerTime < currentTime) then
-	    shouldLog = true
-	 else
-	    shouldLog = false
-	 end
+         if (logTriggerTime == 0) then
+            logTriggerTime = currentTime + 30
+         end
 
-	 -- get capacity, calculate percentage && check voice alert config
-	 if (mahSensor > 1) then
-	    local mahCapa = system.getSensorByID(mahID, mahParam)
+         if (logTriggerTime > 0 and logTriggerTime < currentTime) then
+            shouldLog = true
+         else
+            shouldLog = false
+         end
 
-	    if (mahCapa and mahCapa.valid) then
-	       mahCapa = mahCapa.value
-	       logCapacity = mahCapa
-	       logHaveMah = true
+         -- get capacity, calculate percentage && check voice alert config
+         if (mahSensor > 1) then
+            local mahCapa = system.getSensorByID(mahID, mahParam)
 
-	       local currentPercentage = ((batteries.caps[batIndex] - mahCapa) * 100) / batteries.caps[batIndex]
+            if (mahCapa and mahCapa.valid) then
+               mahCapa = mahCapa.value
+               logCapacity = mahCapa
+               logHaveMah = true
 
-	       if (currentPercentage < 0) then
-		  currentPercentage = 0
-	       elseif (currentPercentage > 100) then
-		  currentPercentage = 100
-	       end
+               local currentPercentage = ((batteries.caps[batIndex] - mahCapa) * 100) / batteries.caps[batIndex]
 
-	       if (lowDisplay) then
-		  currentPercentage = 100
-	       end
+               if (currentPercentage < 0) then
+                  currentPercentage = 0
+               elseif (currentPercentage > 100) then
+                  currentPercentage = 100
+               end
 
-	       percentage = string.format("%.1f", currentPercentage)
+               if (lowDisplay) then
+                  currentPercentage = 100
+               end
 
-	       if (currentPercentage <= alarmCapacity) then
-		  redAlert = true
-		  if (not capVoicePlayed and alarmCapacityVoice ~= "...") then
-		     if (alarmCapacityRpt) then
-			system.playFile(alarmCapacityVoice, AUDIO_QUEUE)
-			system.playFile(alarmCapacityVoice, AUDIO_QUEUE)
-			system.playFile(alarmCapacityVoice, AUDIO_QUEUE)
-		     else
-			system.playFile(alarmCapacityVoice, AUDIO_QUEUE)
-		     end
+               percentage = string.format("%.1f", currentPercentage)
 
-		     capVoicePlayed = true
-		  end
-	       else
-		  capVoicePlayed = false
-	       end
-	    elseif (not lowDisplay) then
-	       percentage = "-"
-	       capVoicePlayed = false
-	       redAlert = false
-	    end
-	 end
+               if (currentPercentage <= alarmCapacity) then
+                  redAlert = true
+                  if (not capVoicePlayed and alarmCapacityVoice ~= "...") then
+                     if (alarmCapacityRpt) then
+                        system.playFile(alarmCapacityVoice, AUDIO_QUEUE)
+                        system.playFile(alarmCapacityVoice, AUDIO_QUEUE)
+                        system.playFile(alarmCapacityVoice, AUDIO_QUEUE)
+                     else
+                        system.playFile(alarmCapacityVoice, AUDIO_QUEUE)
+                     end
 
-	 -- voltage alarms
-	 if (voltSensor > 1) then
-	    local voltValue = system.getSensorByID(voltID, voltParam)
+                     capVoicePlayed = true
+                  end
+               else
+                  capVoicePlayed = false
+               end
+            elseif (not lowDisplay) then
+               percentage = "-"
+               capVoicePlayed = false
+               redAlert = false
+            end
+         end
 
-	    if (voltValue and voltValue.valid) then
-	       voltValue = voltValue.value
+         -- voltage alarms
+         if (voltSensor > 1) then
+            local voltValue = system.getSensorByID(voltID, voltParam)
 
-	       if (voltAlarmTStore >= voltAlarmTCurrent) then
-		  if (voltAlarmTSet == false) then
-		     voltAlarmTCurrent = currentTime
-		     voltAlarmTStore = currentTime + 10
-		     voltAlarmTSet = true
-		  else
-		     voltAlarmTCurrent = system.getTime()
-		  end
-	       
-		  if (alarmInitVolt == 0) then
-		     voltVoicePlayed = false
-		     voltAlarmTStore = 0
-		  else
-		     local alarmVoltValue = alarmInitVolt / 100
-		     local voltLimit = batteries.cells[batIndex] * alarmVoltValue
-		  
-		     if (voltValue > 0 and voltValue <= voltLimit) then
-			redAlert = true
-			shouldLog = false
-			lowDisplay = true
+            if (voltValue and voltValue.valid) then
+               voltValue = voltValue.value
 
-			if (voltAlarmTStore >= voltAlarmTCurrent and voltAlarmTSet == true) then
-			   if (not voltVoicePlayed and alarmVoltVoice ~= "...") then			   
-			      if (alarmVoltRpt) then
-				 system.playFile(alarmInitVoltVoice, AUDIO_QUEUE)
-				 system.playFile(alarmInitVoltVoice, AUDIO_QUEUE)
-				 system.playFile(alarmInitVoltVoice, AUDIO_QUEUE)
-			      else
-				 system.playFile(alarmInitVoltVoice, AUDIO_QUEUE)
-			      end
+               if (voltAlarmTStore >= voltAlarmTCurrent) then
+                  if (voltAlarmTSet == false) then
+                     voltAlarmTCurrent = currentTime
+                     voltAlarmTStore = currentTime + 10
+                     voltAlarmTSet = true
+                  else
+                     voltAlarmTCurrent = system.getTime()
+                  end
 
-			      voltVoicePlayed = true
-			      system.messageBox(trans8.lowFlightpack, 10)
-			   end
-			end
-		     else
-			voltVoicePlayed = false
-			lowDisplay = false
-		     end
-		  end
-	       end
+                  if (alarmInitVolt == 0) then
+                     voltVoicePlayed = false
+                     voltAlarmTStore = 0
+                  else
+                     local alarmVoltValue = alarmInitVolt / 100
+                     local voltLimit = batteries.cells[batIndex] * alarmVoltValue
 
-	       -- low voltage alarm
-	       if (alarmLowVolt == 0) then
-		  lowVoltVoicePlayed = false
-	       else
-		  local lowVoltValue = alarmLowVolt / 100
-		  local lowVoltLimit = batteries.cells[batIndex] * lowVoltValue
-		  
-		  if (voltValue > 0 and voltValue <= lowVoltLimit) then
-		     redAlert = true
-		     lowDisplay = true
+                     if (voltValue > 0 and voltValue <= voltLimit) then
+                        redAlert = true
+                        shouldLog = false
+                        lowDisplay = true
 
-		     if (not lowVoltVoicePlayed and alarmLowVoltVoice ~= "...") then
-			lowVoltVoicePlayed = true
-			
-			if (alarmLowVoltRpt) then
-			   system.playFile(alarmLowVoltVoice, AUDIO_QUEUE)
-			   system.playFile(alarmLowVoltVoice, AUDIO_QUEUE)
-			   system.playFile(alarmLowVoltVoice, AUDIO_QUEUE)
-			else
-			   system.playFile(alarmLowVoltVoice, AUDIO_QUEUE)
-			end
+                        if (voltAlarmTStore >= voltAlarmTCurrent and voltAlarmTSet == true) then
+                           if (not voltVoicePlayed and alarmVoltVoice ~= "...") then
+                              if (alarmVoltRpt) then
+                                 system.playFile(alarmInitVoltVoice, AUDIO_QUEUE)
+                                 system.playFile(alarmInitVoltVoice, AUDIO_QUEUE)
+                                 system.playFile(alarmInitVoltVoice, AUDIO_QUEUE)
+                              else
+                                 system.playFile(alarmInitVoltVoice, AUDIO_QUEUE)
+                              end
 
-			system.messageBox(trans8.lowFlightpack, 10)
-		     end
-		  else
-		     lowVoltVoicePlayed = false
-		  end
-	       end
-	    end
-	 end
-	 
-	 -- Percentage announce	 
-	 if (announceGo) then
-	    local percVal = -1
+                              voltVoicePlayed = true
+                              system.messageBox(trans8.lowFlightpack, 10)
+                           end
+                        end
+                     else
+                        voltVoicePlayed = false
+                        lowDisplay = false
+                     end
+                  end
+               end
+            
+--[[
+               -- low voltage alarm
+               if (alarmLowVolt == 0) then
+                  lowVoltVoicePlayed = false
+                  lowVoltTStore = 0
+               else
+                  local lowVoltValue = alarmLowVolt / 100
+                  local lowVoltLimit = batteries.cells[batIndex] * lowVoltValue
 
-	    if (percentage and percentage ~= "-") then
-	       percVal = tonumber(percentage)
-	    end
-	    
-	    if (percVal >= 0 and percVal <= 100 and announceTime <= currentTime) then
-	       system.playNumber(percVal, 0, "%", trans8.annCap)
-	       announceTime = currentTime + announceRepeat
-	    end
-	 end
-      elseif (rxLink == 0) then -- model disconnected
-	 linkLostTCurrent = system.getTime()
+                  if (voltValue > 0 and voltValue <= lowVoltLimit) then
+                     lowVoltTCurrent = system.getTime()
 
-	 if (lastRxLink > rxLink and not linkLostTSet) then
-	    linkLostTStore = linkLostTCurrent + 5
-	    linkLostTSet = true
-	 end
+                     if (lowVoltTSet == false) then
+                        lowVoltTStore = lowColtTCurrent + 5
+                        lowVoltTSet = true
+                     end
 
-	 if (linkLostTSet and linkLostTStore > 0 and linkLostTStore < linkLostTCurrent) then
-	    if (logHaveMah and shouldLog) then 
-	       if (batteries.caps[batIndex] == 0 or logCapacity == 0) then
-		  shouldLog = false
-	       else
-		  writeLog()
-	       end
-	    end
+                     if (lowVoltTSet and lowVoltTStore >= lowVoltTCurrent) then
+                        redAlert = true
 
-	    loopReset = true
-	    linkLostTStore = 0
-	 end
+                        if (not lowVoltVoicePlayed and alarmLowVoltVoice ~= "...") then
+                           lowVoltVoicePlayed = true
 
-	 if (loopReset) then
-	    batIndex = 0
-	    clearLoopValues()
-	 end
+                           if (alarmLowVoltRpt) then
+                              system.playFile(alarmLowVoltVoice, AUDIO_QUEUE)
+                              system.playFile(alarmLowVoltVoice, AUDIO_QUEUE)
+                              system.playFile(alarmLowVoltVoice, AUDIO_QUEUE)
+                           else
+                              system.playFile(alarmLowVoltVoice, AUDIO_QUEUE)
+                           end
+
+                           system.messageBox(trans8.lowFlightpack, 10)
+                        end
+                     end
+                  else
+                     lowVoltVoicePlayed = false
+                  end
+               end
+]]--
+            end
+         end
+
+         -- Percentage announce	 
+         if (announceGo) then
+            local percVal = -1
+
+            if (percentage and percentage ~= "-") then
+               percVal = tonumber(percentage)
+            end
+
+            if (percVal >= 0 and percVal <= 100 and announceTime <= currentTime) then
+               system.playNumber(percVal, 0, "%", trans8.annCap)
+               announceTime = currentTime + announceRepeat
+            end
+         end
+      end
+   elseif (rxLink == 0) then -- model disconnected
+      if (batIndex > 0) then
+         linkLostTCurrent = system.getTime()
+
+         if (lastRxLink > rxLink and not linkLostTSet) then
+            linkLostTStore = linkLostTCurrent + 5
+            linkLostTSet = true
+         end
+
+         if (linkLostTSet and linkLostTStore > 0 and linkLostTStore < linkLostTCurrent) then
+            if (logHaveMah and shouldLog) then 
+               if (batteries.caps[batIndex] == 0 or logCapacity == 0) then
+                  shouldLog = false
+               else
+                  writeLog()
+               end
+            end
+
+            loopReset = true
+            linkLostTStore = 0
+         end
+
+         if (loopReset) then
+            batIndex = 0
+            clearLoopValues()
+         end
       end
    end
 
@@ -1350,7 +1372,7 @@ local function init()
    batteries.cycles = system.pLoad("BTL_batCycles", { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 })
    
    system.registerForm(1, MENU_APPS, trans8.appName, initSettingsForm, settingsKeyPressed)
-   system.registerForm(2, MENU_MAIN, trans8.battSelName, initBatteryForm, batteryKeyPressed)
+   --system.registerForm(2, MENU_MAIN, trans8.battSelName, initBatteryForm, batteryKeyPressed)
    system.registerTelemetry(1, trans8.telLabel, 2, printBattery)
    collectgarbage()
 end
