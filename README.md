@@ -18,18 +18,18 @@ This code is based on [RFID-Battery](https://www.rc-thoughts.com/rfid-battery) -
 ### Changelog
 
 #### Version 1.4
- * __ *untested*, currently in development__
- * _2021-03-??_ 
+ *  **currently in development, UNTESTED!** 
+ * _Release date: 2021-03-??_ 
  * Battery selection form is no longer present in the main menu, it'll appear automatically after powering on the model
 * Low voltage alarm introduced in v1.3 removed after much consideration. All Jeti radios are capable of doing alarm such as this one by themselves, so all users are advised to set up one as a backup to capacity measuring.
 
 #### Version 1.3 - _untested_
- * _2021-03-09_
+ * _Release date: 2021-03-09_
  * **The alarm is not working correctly, needs to be fixed. It's recommended to use v1.2 for the time being**
  * Added low battery voltage alarm
    * This will be triggered during the model operation, or may be triggered after main battery is disconnected and the receiver is powered from backup battery.
    * Won't affect the log - if the conditions for the flight to be logged are met, the log will be added to csv even if this alarm was triggered.
 
 #### Version 1.2
- * _2021-03-07_
+ * _Release date: 2021-03-07_
  * Tested and working correctly
