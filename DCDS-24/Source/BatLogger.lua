@@ -6,7 +6,7 @@
     --------------------------------------------------------------------
     Released under MIT-license by Roman Dittrich (dittrich.r@gmail.com)
     
-    Version 1.3, released 2021-03-09
+    Version 1.4, released 2021-03-12
     --------------------------------------------------------------------
 --]]
 collectgarbage()
@@ -14,7 +14,7 @@ collectgarbage()
 ------------------------------------------------------------------------
 -- Locals
 ------------------------------------------------------------------------
-local appVersion = "1.3"
+local appVersion = "1.4"
 local formFooter = "Battery Logger v." .. appVersion
 local formFooter2 = "Code by Roman Dittrich, based on RFID-Battery"
 local trans8
@@ -31,7 +31,6 @@ local voltSensor, voltParam, voltID
 
 local alarmCapacity, alarmCapacityVoice, alarmCapacityRpt, alarmCapacityRptIndex
 local alarmInitVolt, alarmInitVoltVoice, alarmInitVoltRpt, alarmInitVoltRptIndex
-local alarmLowVolt, alarmLowVoltVoice, alarmLowVoltRpt, alarmLowVoltRptIndex
 
 local announceSwitch
 local announceTime, announceRepeat = 0, 0
@@ -43,9 +42,6 @@ local voltAlarmTSet = false
 local voltAlarmTStore, voltAlarmTCurrent = 0, 0
 local capVoicePlayed = false
 local voltVoicePlayed = false
-local lowVoltVoicePlayed = false
-local lowVoltTSet = false
-local lowVoltTStore, lowVoltTCurrent = 0, 0
 
 local shouldLog = false
 local logTriggerTime = 0
@@ -88,11 +84,15 @@ end
 local function truncatedBatteryList()
    retval = {}
 
+   retval[1] = "- Unlisted battery - "
+   
    for i, battery in ipairs(batteries.names) do
       if (battery ~= "") then
-	 retval[i] = battery
+	 retval[i + 1] = battery
       end
    end
+
+
 
    return retval
 end
@@ -119,9 +119,6 @@ local function clearLoopValues()
    linkLostTSet = false
    linkLostTStore = 0
    linkLostTCurrent = 0
-   lowVoltTSet = false
-   lowVoltTStore = 0
-   lowVoltTCurrent = 0
 end
 
 ------------------------------------------------------------------------
@@ -576,10 +573,17 @@ end
 -- Battery selection change
 ------------------------------------------------------------------------
 local function selectionBatteryChanged(value)
-   batIndex = value
+   if (value == 1) then
+      batIndex = -1
+   else
+      batIndex = value - 1
+   end
+   
    form.reinit()
    clearLoopValues()
-   system.messageBox(trans8.battSelected .. batteries.names[batIndex])
+   if (batIndex > 0) then
+      system.messageBox(trans8.battSelected .. batteries.names[batIndex])
+   end
 end
 
 ------------------------------------------------------------------------
@@ -1241,46 +1245,6 @@ local function loop()
                      end
                   end
                end
-            
---[[
-               -- low voltage alarm
-               if (alarmLowVolt == 0) then
-                  lowVoltVoicePlayed = false
-                  lowVoltTStore = 0
-               else
-                  local lowVoltValue = alarmLowVolt / 100
-                  local lowVoltLimit = batteries.cells[batIndex] * lowVoltValue
-
-                  if (voltValue > 0 and voltValue <= lowVoltLimit) then
-                     lowVoltTCurrent = system.getTime()
-
-                     if (lowVoltTSet == false) then
-                        lowVoltTStore = lowColtTCurrent + 5
-                        lowVoltTSet = true
-                     end
-
-                     if (lowVoltTSet and lowVoltTStore >= lowVoltTCurrent) then
-                        redAlert = true
-
-                        if (not lowVoltVoicePlayed and alarmLowVoltVoice ~= "...") then
-                           lowVoltVoicePlayed = true
-
-                           if (alarmLowVoltRpt) then
-                              system.playFile(alarmLowVoltVoice, AUDIO_QUEUE)
-                              system.playFile(alarmLowVoltVoice, AUDIO_QUEUE)
-                              system.playFile(alarmLowVoltVoice, AUDIO_QUEUE)
-                           else
-                              system.playFile(alarmLowVoltVoice, AUDIO_QUEUE)
-                           end
-
-                           system.messageBox(trans8.lowFlightpack, 10)
-                        end
-                     end
-                  else
-                     lowVoltVoicePlayed = false
-                  end
-               end
-]]--
             end
          end
 
@@ -1334,7 +1298,7 @@ end
 ------------------------------------------------------------------------
 -- init
 ------------------------------------------------------------------------
-local function init()
+local function init(code)
    modelName = system.getProperty("Model")
    batIndex = 0
    
@@ -1358,11 +1322,6 @@ local function init()
    local alVoltRpt = system.pLoad("BTL_initVoltAlarmRpt", 0)
    alarmInitVoltRpt = (alVoltRpt == 1)
 
-   alarmLowVolt = system.pLoad("BTL_lowVoltAlarm", 0)
-   alarmLowVoltVoice = system.pLoad("BTL_lowVoltAlarmVoice", "...")
-   local alLowVoltRpt = system.pLoad("BTL_lowVoltAlarmRpt", 0)
-   alarmLowVoltRpt = (alLowVoltRpt == 1)
-
    announceSwitch = system.pLoad("BTL_announceSwitch")
    announceRepeat = system.pLoad("BTL_announceTime", 0)
 
@@ -1372,7 +1331,11 @@ local function init()
    batteries.cycles = system.pLoad("BTL_batCycles", { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 })
    
    system.registerForm(1, MENU_APPS, trans8.appName, initSettingsForm, settingsKeyPressed)
-   --system.registerForm(2, MENU_MAIN, trans8.battSelName, initBatteryForm, batteryKeyPressed)
+
+   if (code == 1) then
+      system.registerForm(2, 0, trans8.battSelName, initBatteryForm, batteryKeyPressed)
+   end
+   
    system.registerTelemetry(1, trans8.telLabel, 2, printBattery)
    collectgarbage()
 end
