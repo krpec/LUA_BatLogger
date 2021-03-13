@@ -6,7 +6,7 @@
     --------------------------------------------------------------------
     Released under MIT-license by Roman Dittrich (dittrich.r@gmail.com)
     
-    Version 1.4, released 2021-03-12
+    Version 1.4, released 2021-03-14
     --------------------------------------------------------------------
 --]]
 collectgarbage()
@@ -671,22 +671,6 @@ local function initSettingsForm(subform)
       form.addRow(2)
       form.addLabel({ label = trans8.rptAlm, width = 275 })
       alarmInitVoltRptIndex = form.addCheckbox(alarmInitVoltRpt, settingsChanged_voltAlarmRepeat)
-
-      --low voltage alarm settings
-      form.addRow(1)
-      form.addLabel({ label = trans8.labelAlarmVolt, font = FONT_BOLD })
-
-      form.addRow(2)
-      form.addLabel({ label = trans8.AlmValVolt, width = 200 })
-      form.addIntbox(alarmLowVolt, 0, 435, 0, 2, 1, settingsChanged_lowVoltAlarm)
-
-      form.addRow(2)
-      form.addLabel({ label = trans8.selAudio })
-      form.addAudioFilebox(alarmLowVoltVoice, settingsChanged_lowVoltAlarmVoice)
-
-      form.addRow(2)
-      form.addLabel({ label = trans8.rptAlm, width = 275 })
-      alarmLowVoltRptIndex = form.addCheckbox(alarmLowVoltRpt, settingsChanged_lowVoltAlarmRepeat)
       
       --announce settings
       form.addRow(1)
