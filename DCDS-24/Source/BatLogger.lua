@@ -6,7 +6,7 @@
     --------------------------------------------------------------------
     Released under MIT-license by Roman Dittrich (dittrich.r@gmail.com)
     
-    Version 1.4, released 2021-03-14
+    Version 1.4, released 2021-03-15
     --------------------------------------------------------------------
 --]]
 collectgarbage()
@@ -83,16 +83,13 @@ end
 ------------------------------------------------------------------------
 local function truncatedBatteryList()
    retval = {}
-
-   retval[1] = "- Unlisted battery - "
+   retval[1] = trans8.unlistedBat
    
    for i, battery in ipairs(batteries.names) do
       if (battery ~= "") then
 	 retval[i + 1] = battery
       end
    end
-
-
 
    return retval
 end
@@ -573,6 +570,8 @@ end
 -- Battery selection change
 ------------------------------------------------------------------------
 local function selectionBatteryChanged(value)
+   menuBatIndex = value
+   
    if (value == 1) then
       batIndex = -1
    else
@@ -1089,7 +1088,7 @@ local function initBatteryForm()
 
    form.addRow(2)
    form.addLabel({ label = trans8.battSelect })
-   form.addSelectbox(truncatedBatteryList(), batIndex, true, selectionBatteryChanged)
+   form.addSelectbox(truncatedBatteryList(), menuBatIndex, true, selectionBatteryChanged)
 
    form.addRow(1)
    form.addLabel({ label = formFooter, font = FONT_MINI, alignRight = true })
@@ -1102,6 +1101,7 @@ end
 local function batteryKeyPressed(key)
    if (key == KEY_3) then
       batIndex = 0
+      menuBatIndex = 0
       form.reinit()
       clearLoopValues()
       system.messageBox(trans8.battUnselect)
@@ -1270,6 +1270,7 @@ local function loop()
 
          if (loopReset) then
             batIndex = 0
+	    menuBatIndex = 0
             clearLoopValues()
          end
       end
@@ -1285,6 +1286,7 @@ end
 local function init(code)
    modelName = system.getProperty("Model")
    batIndex = 0
+   menuBatIndex = 0
    
    readSensors()
    
@@ -1315,11 +1317,6 @@ local function init(code)
    batteries.cycles = system.pLoad("BTL_batCycles", { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 })
    
    system.registerForm(1, MENU_APPS, trans8.appName, initSettingsForm, settingsKeyPressed)
-
-   if (code == 1) then
-      system.registerForm(2, 0, trans8.battSelName, initBatteryForm, batteryKeyPressed)
-   end
-   
    system.registerTelemetry(1, trans8.telLabel, 2, printBattery)
    collectgarbage()
 end

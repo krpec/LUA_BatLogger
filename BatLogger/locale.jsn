@@ -33,7 +33,8 @@
     "spacer":" -----------------------------------------------------------------------------------------------",
     "annSw":"Announcement Switch",
     "annCap":"Capacity",
-    "annRpt":"Repeat Announcement (s)"
+    "annRpt":"Repeat Announcement (s)",
+    "unlistedBat": "- Unlisted battery -"
   },
   "cz": {
     "appName": "Log baterií",
@@ -68,6 +69,7 @@
     "spacer":" -----------------------------------------------------------------------------------------------",
     "annSw":"Spínač oznámení",
     "annCap":"Kapacita",
-    "annRpt":"Opakovat oznámení (s)"
+    "annRpt":"Opakovat oznámení (s)",
+    "unlistedBat":"- Neuložená baterie -"
   }
 }
