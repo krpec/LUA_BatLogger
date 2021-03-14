@@ -18,10 +18,10 @@ This code is based on [RFID-Battery](https://www.rc-thoughts.com/rfid-battery) -
 ### Changelog
 
 #### Version 1.4
- *  **currently in development, UNTESTED!** 
- * _Release date: 2021-03-??_ 
+ * _Release date: 2021-03-15_ 
  * Battery selection form is no longer present in the main menu, it'll appear automatically after powering on the model
-* Low voltage alarm introduced in v1.3 removed after much consideration. All Jeti radios are capable of doing alarm such as this one by themselves, so all users are advised to set up one as a backup to capacity measuring.
+ * Low voltage alarm introduced in v1.3 removed after much consideration. All Jeti radios are capable of doing alarm such as this one by themselves, so all users are advised to set up one as a backup to capacity measuring.
+ * Tested, working
 
 #### Version 1.3 - _untested_
  * _Release date: 2021-03-09_

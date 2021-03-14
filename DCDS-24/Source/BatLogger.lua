@@ -24,7 +24,7 @@ local modelName
 local sensors = { labels = { "..." }, ids = { "..." }, params = { "..." } }
 
 local batteries = { names = {}, cells = {}, caps = {}, cycles = {} }
-local batIndex
+local batIndex, menuBatIndex
 
 local mahSensor, mahParam, mahID
 local voltSensor, voltParam, voltID
