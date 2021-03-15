@@ -10,20 +10,26 @@ This code is based on [RFID-Battery](https://www.rc-thoughts.com/rfid-battery) -
  * All settings are model-specific
  * Automatic detection of empty battery when powering the model, alarm has user selectable voice-alert, can be repeated once or three times (alarm is disabled when the alarm voltage is set to 0.00V)
  * Capacity alarm has user selectable voice-alert, can be repeated once or three times
- * Low battery voltage alarm has user selectable voice-alert, can be repeated once or three times (alarm is disabled when the alarm voltage is set to 0.00V)
  * Possibility to assing a switch for remaining percentage announcement
  * Telemetry window changes based on current situation (battery overview, capacity overview, "LOW" warning)
  * Each battery has its name, cell count, capacity and cycle count stored
  * Flight logging to csv file (full battery has to be connected and model has to be powered for at least 30 seconds and consume some mAhs for the logging to take place)
 
 ### Changelog
+
+#### Version 1.4
+ * _Release date: 2021-03-15_ 
+ * Battery selection form is no longer present in the main menu, it'll appear automatically after powering on the model
+ * Low voltage alarm introduced in v1.3 removed after much consideration. All Jeti radios are capable of doing alarm such as this one by themselves, so all users are advised to set up one as a backup to capacity measuring.
+ * Tested, working
+
 #### Version 1.3 - _untested_
- * _2021-03-09_
+ * _Release date: 2021-03-09_
  * **The alarm is not working correctly, needs to be fixed. It's recommended to use v1.2 for the time being**
  * Added low battery voltage alarm
    * This will be triggered during the model operation, or may be triggered after main battery is disconnected and the receiver is powered from backup battery.
    * Won't affect the log - if the conditions for the flight to be logged are met, the log will be added to csv even if this alarm was triggered.
 
 #### Version 1.2
- * _2021-03-07_
+ * _Release date: 2021-03-07_
  * Tested and working correctly
