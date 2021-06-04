@@ -6,7 +6,7 @@
     --------------------------------------------------------------------
     Released under MIT-license by Roman Dittrich (dittrich.r@gmail.com)
     
-    Version 1.4, released 2021-03-15
+    Version 1.5, released 2021-06-04
     --------------------------------------------------------------------
 --]]
 collectgarbage()
@@ -14,7 +14,7 @@ collectgarbage()
 ------------------------------------------------------------------------
 -- Locals
 ------------------------------------------------------------------------
-local appVersion = "1.4"
+local appVersion = "1.5"
 local formFooter = "Battery Logger v." .. appVersion
 local formFooter2 = "Code by Roman Dittrich, based on RFID-Battery"
 local trans8
@@ -47,6 +47,9 @@ local shouldLog = false
 local logTriggerTime = 0
 local logCapacity = 0
 local logHaveMah = false
+
+local logSetTime = 0
+local logSetCapa = 0
 
 local loopReset = false
 local linkLostTSet = false
@@ -296,6 +299,16 @@ end
 local function settingsChanged_announceTime(value)
    announceRepeat = value
    system.pSave("BTL_announceTime", value)
+end
+
+local function settingsChanged_logTime(value)
+   logSetTime = value
+   system.pSave("BTL_logTime", value)
+end
+
+local function settingsChanged_logCapa(value)
+   logSetCapa = value
+   system.pSave("BTL_logCapa", value)
 end
 
 ------------------------------------------------------------------------
@@ -683,6 +696,18 @@ local function initSettingsForm(subform)
       form.addLabel({ label = trans8.annRpt, width = 220 })
       form.addIntbox(announceRepeat, 0, 60, 0, 0, 1, settingsChanged_announceTime)
       
+      --logger settings
+      form.addRow(1)
+      form.addLabel({ label = trans8.labelLogger, font = FONT_BOLD })
+
+      form.addRow(2)
+      form.addLabel({ label = trans8.logTime, width = 200 })
+      form.addIntbox(logSetTime, 0, 60, 0, 0, 1, settingsChanged_logTime)
+
+      form.addRow(2)
+      form.addLabel({ label = trans8.logCapa, width = 200 })
+      form.addIntbox(logSetCapa, 0, 1000, 0, 0, 50, settingsChanged_logCapa, { width = 167 })
+
       form.addRow(1)
       form.addLabel({ label = formFooter, font = FONT_MINI, alignRight = true })
       form.addRow(1)
@@ -1126,7 +1151,7 @@ local function loop()
          linkLostTStore = 0
 
          if (logTriggerTime == 0) then
-            logTriggerTime = currentTime + 30
+            logTriggerTime = currentTime + logSetTime
          end
 
          if (logTriggerTime > 0 and logTriggerTime < currentTime) then
@@ -1257,7 +1282,7 @@ local function loop()
 
          if (linkLostTSet and linkLostTStore > 0 and linkLostTStore < linkLostTCurrent) then
             if (logHaveMah and shouldLog) then 
-               if (batteries.caps[batIndex] == 0 or logCapacity == 0) then
+               if (batteries.caps[batIndex] == 0 or logCapacity < logSetCapa) then
                   shouldLog = false
                else
                   writeLog()
@@ -1307,6 +1332,9 @@ local function init(code)
    alarmInitVoltVoice = system.pLoad("BTL_initVoltAlarmVoice", "...")
    local alVoltRpt = system.pLoad("BTL_initVoltAlarmRpt", 0)
    alarmInitVoltRpt = (alVoltRpt == 1)
+
+   logSetTime = system.pLoad("BTL_logTime", 0)
+   logSetCapa = system.pLoad("BTL_logCapa", 0)
 
    announceSwitch = system.pLoad("BTL_announceSwitch")
    announceRepeat = system.pLoad("BTL_announceTime", 0)

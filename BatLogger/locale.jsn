@@ -34,7 +34,10 @@
     "annSw":"Announcement Switch",
     "annCap":"Capacity",
     "annRpt":"Repeat Announcement (s)",
-    "unlistedBat": "- Unlisted battery -"
+    "unlistedBat": "- Unlisted battery -",
+    "labelLogger": "Logger settings",
+    "logTime": "Trigger time",
+    "logCapa": "Trigger capacity"
   },
   "cz": {
     "appName": "Log baterií",
@@ -70,6 +73,9 @@
     "annSw":"Spínač oznámení",
     "annCap":"Kapacita",
     "annRpt":"Opakovat oznámení (s)",
-    "unlistedBat":"- Neuložená baterie -"
+    "unlistedBat":"- Neuložená baterie -",
+    "labelLogger": "Nastavení logů",
+    "logTime": "Minimální čas",
+    "logCapa": "Minimální kapacita"
   }
 }
