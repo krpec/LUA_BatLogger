@@ -13,9 +13,13 @@ This code is based on [RFID-Battery](https://www.rc-thoughts.com/rfid-battery) -
  * Possibility to assing a switch for remaining percentage announcement
  * Telemetry window changes based on current situation (battery overview, capacity overview, "LOW" warning)
  * Each battery has its name, cell count, capacity and cycle count stored
- * Flight logging to csv file (full battery has to be connected and model has to be powered for at least 30 seconds and consume some mAhs for the logging to take place)
+ * Flight logging to csv file (~~full battery has to be connected and model has to be powered for at least 30 seconds and consume some mAhs for the logging to take place~~ from version 1.5 the minimal time and consumed capacity can be set by user)
 
 ### Changelog
+
+#### Version 1.5
+ * _Release date: 2021-06-04_
+ * Added miminal time & capacity settings for the logger.
 
 #### Version 1.4
  * _Release date: 2021-03-15_ 
