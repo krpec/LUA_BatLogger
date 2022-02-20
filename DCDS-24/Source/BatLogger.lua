@@ -6,7 +6,7 @@
     --------------------------------------------------------------------
     Released under MIT-license by Roman Dittrich (dittrich.r@gmail.com)
     
-    Version 1.5, released 2021-06-04
+    Version 1.6, released 2022-02-20
     --------------------------------------------------------------------
 --]]
 collectgarbage()
@@ -14,7 +14,7 @@ collectgarbage()
 ------------------------------------------------------------------------
 -- Locals
 ------------------------------------------------------------------------
-local appVersion = "1.5"
+local appVersion = "1.6"
 local formFooter = "Battery Logger v." .. appVersion
 local formFooter2 = "Code by Roman Dittrich, based on RFID-Battery"
 local trans8
