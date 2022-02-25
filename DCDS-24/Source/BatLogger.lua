@@ -6,7 +6,7 @@
     --------------------------------------------------------------------
     Released under MIT-license by Roman Dittrich (dittrich.r@gmail.com)
     
-    Version 1.6, released 2022-02-20
+    Version 1.6.1, released 2022-02-25
     --------------------------------------------------------------------
 --]]
 collectgarbage()
@@ -14,7 +14,7 @@ collectgarbage()
 ------------------------------------------------------------------------
 -- Locals
 ------------------------------------------------------------------------
-local appVersion = "1.6"
+local appVersion = "1.6.1"
 local formFooter = "Battery Logger v." .. appVersion
 local formFooter2 = "Code by Roman Dittrich, based on RFID-Battery"
 local trans8
@@ -847,7 +847,7 @@ local function initSettingsForm(subform)
       -- Battery #6
       form.addRow(2)
       form.addLabel({ label = string.format("%s 6", trans8.battName), width = 140 })
-      form.addTextbox(batteries.names[6], 32, settingsChanged_bat5Name, { width = 167 })
+      form.addTextbox(batteries.names[6], 32, settingsChanged_bat6Name, { width = 167 })
 
       form.addRow(2)
       form.addLabel({ label = trans8.battCellNum, width = 140 })
